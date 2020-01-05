@@ -1,3 +1,6 @@
+// eslint-disable-next-line
+import piecesReference from '!raw-loader!@/assets/pieces.txt';
+
 interface PieceParams {
   id: number;
   top: number;
@@ -47,3 +50,24 @@ export default class Piece {
       .filter(side => side === 0).length > 1;
   }
 }
+
+export const pieces = (() => {
+  const items: Piece[] = [];
+  // eslint-disable-next-line
+  const references = piecesReference.split("\n");
+
+  return [...Array(references.length)]
+    .map((_, index) => {
+      const [top, bottom, left, right] = references[index]
+        .split(' ')
+        .map(el => parseInt(el, 10));
+
+      return new Piece({
+        id: index + 1,
+        top,
+        bottom,
+        left,
+        right,
+      });
+    });
+})();

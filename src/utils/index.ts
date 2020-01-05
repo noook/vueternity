@@ -21,3 +21,20 @@ export function random<T>(arr: T[]): T {
   const index = Math.floor(Math.random() * arr.length);
   return shuffle(arr)[index];
 }
+
+export function sleep(timeout: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), timeout);
+  });
+}
+
+export function partition<T>(array: T[], predicate: (item: T) => Boolean): [T[], T[]] {
+  const truthy: T[] = [];
+  const falsey: T[] = [];
+
+  array.forEach((el) => {
+    (predicate(el) === true ? truthy : falsey).push(el);
+  });
+
+  return [truthy, falsey];
+}

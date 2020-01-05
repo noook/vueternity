@@ -1,14 +1,15 @@
 // eslint-disable-next-line
 import piecesReference from '!raw-loader!@/assets/pieces.txt';
 import Piece from './piece';
-import { shuffle } from '@/utils';
+import { shuffle, sleep } from '@/utils';
 
 export class Box {
+  public id: number;
   public piece: Piece;
   public x: number;
   public y: number;
 
-  public constructor(x: number, y: number) {
+  public constructor(id: number, x: number, y: number) {
     this.piece = new Piece({
       id: 0,
       top: 0,
@@ -16,6 +17,7 @@ export class Box {
       right: 0,
       left: 0,
     });
+    this.id = id;
     this.x = x;
     this.y = y;
   }
@@ -39,12 +41,14 @@ export class Board {
   public constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
+    let id = 1;
 
     for (let i = 0; i < height; i += 1) {
       const row: Box[] = [];
 
       for (let j = 0; j < width; j += 1) {
-        row.push(new Box(j, i));
+        row.push(new Box(id, j, i));
+        id += 1;
       }
       this.boxes.push(row);
     }
@@ -56,24 +60,32 @@ export class Board {
     return this;
   }
 
-  public closestEmptyCell(x: number, y: number): Box | null {
+  public closestEmptyCell(x: number, y: number, tried: number[]): Box | null {
     const maxRange = this.height > this.width ? this.height : this.width;
 
     for (let rangeInc = 1; rangeInc <= maxRange / 2; rangeInc += 1) {
       for (let i = -1 * rangeInc; i <= rangeInc; i += 1) {
         for (let j = -1 * rangeInc; j <= rangeInc; j += 1) {
-          const conditions = [
-            x + j < 0,
-            y + i < 0,
-            x + j > this.width,
-            y + i < this.height,
-          ];
-
-          if (conditions.includes(true)) {
+          if (x + j < 0 || y + i < 0 || x + j > this.width || y + i > this.height) {
             continue;
           }
 
+          if (!this.boxes[j + y][i + x]) {
+            return null;
+          }
+
           if (this.boxes[j + y][i + x].isBorder()) {
+            continue;
+          }
+
+          if (this.boxes[j + y - 1][i + x].piece.id === 0
+            && this.boxes[j + y + 1][i + x].piece.id === 0
+            && this.boxes[j + y][i + x - 1].piece.id === 0
+            && this.boxes[j + y][i + x + 1].piece.id === 0) {
+            continue;
+          }
+
+          if (tried.includes(this.boxes[j + y][i + x].id)) {
             continue;
           }
 
@@ -85,6 +97,37 @@ export class Board {
     }
 
     return null;
+  }
+
+  public assignPiece(box: Box, piece: Piece): boolean {
+    const ok = {
+      top: true,
+      bottom: true,
+      left: true,
+      right: true,
+    };
+
+    for (let i = 0; i < 4; i += 1) {
+      if (this.boxes[box.y - 1][box.x].piece.id !== 0) {
+        ok.top = this.boxes[box.y - 1][box.x].piece.bottom === piece.top;
+      }
+      if (this.boxes[box.y + 1][box.x].piece.id !== 0) {
+        ok.bottom = this.boxes[box.y + 1][box.x].piece.top === piece.bottom;
+      }
+      if (this.boxes[box.y][box.x - 1].piece.id !== 0) {
+        ok.left = this.boxes[box.y][box.x - 1].piece.right === piece.left;
+      }
+      if (this.boxes[box.y][box.x + 1].piece.id !== 0) {
+        ok.right = this.boxes[box.y][box.x + 1].piece.left === piece.right;
+      }
+
+      if (Object.values(ok).every(val => val === true)) {
+        return true;
+      }
+      piece.rotate(1);
+    }
+
+    return false;
   }
 
   public export(): string {
@@ -106,14 +149,31 @@ export class Board {
     return output.join("\n");
   }
 
+  public reset() {
+    this.boxes = [];
+    let id = 1;
+
+    for (let i = 0; i < this.height; i += 1) {
+      const row: Box[] = [];
+
+      for (let j = 0; j < this.width; j += 1) {
+        row.push(new Box(id, j, i));
+        id += 1;
+      }
+      this.boxes.push(row);
+    }
+  }
+
   public randomFill() {
     // eslint-disable-next-line
     const reference = piecesReference.split("\n");
-    // eslint-disable-next-line
     let pieces: Piece[] = [];
 
     for (let i = 0; i < 256; i += 1) {
-      const [top, bottom, left, right] = reference[i].split(' ').map(el => parseInt(el, 10));
+      const [top, bottom, left, right] = reference[i]
+        .split(' ')
+        .map(el => parseInt(el, 10));
+
       pieces.push(new Piece({
         id: i + 1,
         top,

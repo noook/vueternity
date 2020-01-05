@@ -1,21 +1,26 @@
 <template>
-  <div class="board">
-    <div class="row" v-for="(row, i) in board.boxes" :key="i">
-      <img
-        v-for="(box, j) in row"
-        :key="j"
-        class="piece"
-        :src="`${assetsPath}/${box.piece.id}.png`" alt="">
+  <div class="contain">
+    <!-- <img :src="`${assetsPath}/${preview}.png`"> -->
+    <div class="board">
+      <div class="row" v-for="(row, i) in board.boxes" :key="i">
+        <img
+          v-for="(box, j) in row"
+          :key="j"
+          class="piece"
+          :class="[`rotation-${box.piece.rotation}`]"
+          :src="`${assetsPath}/${box.piece.id}.png`">
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { createComponent } from '@vue/composition-api';
+import { createComponent, computed } from '@vue/composition-api';
 import { Board } from '@/types/board';
 
 interface Props {
   board: Board;
+  preview: number;
 }
 
 const assetsPath = `${window.location.origin}/assets`;
@@ -25,6 +30,9 @@ export default createComponent<Props>({
     board: {
       type: Object as () => Board,
       required: true,
+    },
+    preview: {
+      type: Number,
     },
   },
   setup(props: Props) {
@@ -48,5 +56,17 @@ export default createComponent<Props>({
 img.piece {
   width: 40px;
   height: 40px;
+
+  &.rotation- {
+    &1 {
+      transform: rotate(90deg);
+    }
+    &2 {
+      transform: rotate(180deg);
+    }
+    &3 {
+      transform: rotate(270deg);
+    }
+  }
 }
 </style>
