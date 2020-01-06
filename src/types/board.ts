@@ -1,7 +1,15 @@
 // eslint-disable-next-line
 import piecesReference from '!raw-loader!@/assets/pieces.txt';
 import Piece from './piece';
-import { shuffle, sleep } from '@/utils';
+import { shuffle, partition } from '@/utils';
+
+type EdgeBox = Box & {
+  y: 0 | 15;
+} & {
+  x: 0 | 15;
+}
+
+type Position = 'top' | 'bottom' | 'left' | 'right';
 
 export class Box {
   public id: number;
@@ -28,7 +36,12 @@ export class Box {
     return this;
   }
 
-  public isBorder(): boolean {
+  public isCorner(): boolean {
+    return [this.x === 0, this.y === 0, this.x === 15, this.y === 15]
+      .filter(test => test === true).length > 1;
+  }
+
+  public isBorder(): this is EdgeBox {
     return this.x === 0 || this.y === 0 || this.x === 15 || this.y === 15;
   }
 }
@@ -54,8 +67,61 @@ export class Board {
     }
   }
 
+  public solve(pieces: Piece[], tried: number[]) {
+    const box = this.closestEmptyCell(7, 8, tried);
+    if (box === null) {
+      return;
+    }
+    tried.push(box!.id);
+
+    for (let i = 0; i < pieces.length; i += 1) {
+      const assigned = this.assignPiece(box, pieces[i]);
+
+      if (assigned) {
+        this.setPiece(pieces.splice(i, 1)[0], box.x, box.y);
+        break;
+      }
+    }
+    this.solve(pieces, tried);
+  }
+
+  public solveBorders(borders: Piece[]) {
+    const [corners, edges] = partition(borders, piece => piece.isCorner());
+    this.setCorners(shuffle(corners) as [Piece, Piece, Piece, Piece]);
+    this.solveEdges(edges);
+  }
+
   public setPiece(piece: Piece, x: number, y: number): this {
     this.boxes[y][x].setPiece(piece);
+
+    return this;
+  }
+
+  get validBoxes(): number {
+    return this.boxes.reduce((acc, row) => {
+      acc += row.filter(box => box.piece.id !== 0).length;
+      return acc;
+    }, 0);
+  }
+
+  public setCorners(corners: [Piece, Piece, Piece, Piece]): this {
+    const [topLeft, topRight, bottomLeft, bottomRight] = corners;
+    while (!(topLeft.top === 0 && topLeft.left === 0)) {
+      topLeft.rotate(1);
+    }
+    while (!(topRight.top === 0 && topRight.right === 0)) {
+      topRight.rotate(1);
+    }
+    while (!(bottomLeft.bottom === 0 && bottomLeft.left === 0)) {
+      bottomLeft.rotate(1);
+    }
+    while (!(bottomRight.bottom === 0 && bottomRight.right === 0)) {
+      bottomRight.rotate(1);
+    }
+    this.setPiece(topLeft, 0, 0);
+    this.setPiece(topRight, this.width - 1, 0);
+    this.setPiece(bottomLeft, 0, this.height - 1);
+    this.setPiece(bottomRight, this.width - 1, this.height - 1);
 
     return this;
   }
@@ -100,6 +166,9 @@ export class Board {
   }
 
   public assignPiece(box: Box, piece: Piece): boolean {
+    if (box.isBorder()) {
+      return this.assignEdge(box, piece);
+    }
     const ok = {
       top: true,
       bottom: true,
@@ -108,16 +177,16 @@ export class Board {
     };
 
     for (let i = 0; i < 4; i += 1) {
-      if (this.boxes[box.y - 1][box.x].piece.id !== 0) {
+      if (this.boxes[box.y - 1][box.x] && this.boxes[box.y - 1][box.x].piece.id !== 0) {
         ok.top = this.boxes[box.y - 1][box.x].piece.bottom === piece.top;
       }
-      if (this.boxes[box.y + 1][box.x].piece.id !== 0) {
+      if (this.boxes[box.y + 1][box.x] && this.boxes[box.y + 1][box.x].piece.id !== 0) {
         ok.bottom = this.boxes[box.y + 1][box.x].piece.top === piece.bottom;
       }
-      if (this.boxes[box.y][box.x - 1].piece.id !== 0) {
+      if (this.boxes[box.y][box.x - 1] && this.boxes[box.y][box.x - 1].piece.id !== 0) {
         ok.left = this.boxes[box.y][box.x - 1].piece.right === piece.left;
       }
-      if (this.boxes[box.y][box.x + 1].piece.id !== 0) {
+      if (this.boxes[box.y][box.x + 1] && this.boxes[box.y][box.x + 1].piece.id !== 0) {
         ok.right = this.boxes[box.y][box.x + 1].piece.left === piece.right;
       }
 
@@ -128,6 +197,74 @@ export class Board {
     }
 
     return false;
+  }
+
+  private getEdges(): EdgeBox[] {
+    return this.boxes.reduce<EdgeBox[]>((acc, row) => {
+      acc.push(...row.filter((box): box is EdgeBox => box.isBorder() && !box.isCorner()));
+      return acc;
+    }, []);
+  }
+
+  public solveEdges(borders: Piece[]) {
+    const edges = this.getEdges();
+    const tried: number[] = [];
+    for (let i = 0; i < edges.length; i += 1) {
+      const piece = this.tryEdge(edges[i], borders);
+      if (piece !== null) {
+        borders.splice(borders.findIndex(p => p.id === piece.id), 1);
+      }
+    }
+  }
+
+  private tryEdge(edge: EdgeBox, pieces: Piece[]): Piece | null {
+    for (let i = 0; i < pieces.length; i += 1) {
+      const assigned = this.assignEdge(edge, pieces[i]);
+      if (assigned) {
+        this.setPiece(pieces[i], edge.x, edge.y);
+        return pieces[i];
+      }
+    }
+    return null;
+  }
+
+  private assignEdge(box: EdgeBox, piece: Piece): boolean {
+    const ok = {
+      top: true,
+      bottom: true,
+      left: true,
+      right: true,
+    };
+    let position!: Position;
+
+    if (box.y === 0) {
+      position = 'top';
+    } else if (box.y === 15) {
+      position = 'bottom';
+    } else if (box.x === 0) {
+      position = 'left';
+    } else if (box.x === 15) {
+      position = 'right';
+    }
+
+    while (piece[position] !== 0) {
+      piece.rotate(1);
+    }
+
+    if (position !== 'top' && this.boxes[box.y - 1][box.x].piece.id !== 0) {
+      ok.top = this.boxes[box.y - 1][box.x].piece.bottom === piece.top;
+    }
+    if (position !== 'bottom' && this.boxes[box.y + 1][box.x].piece.id !== 0) {
+      ok.bottom = this.boxes[box.y + 1][box.x].piece.top === piece.bottom;
+    }
+    if (position !== 'left' && this.boxes[box.y][box.x - 1].piece.id !== 0) {
+      ok.left = this.boxes[box.y][box.x - 1].piece.right === piece.left;
+    }
+    if (position !== 'right' && this.boxes[box.y][box.x + 1].piece.id !== 0) {
+      ok.right = this.boxes[box.y][box.x + 1].piece.left === piece.right;
+    }
+
+    return Object.values(ok).every(val => val === true);
   }
 
   public export(): string {

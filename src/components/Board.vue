@@ -1,15 +1,13 @@
 <template>
-  <div class="contain">
-    <!-- <img :src="`${assetsPath}/${preview}.png`"> -->
-    <div class="board">
-      <div class="row" v-for="(row, i) in board.boxes" :key="i">
-        <img
-          v-for="(box, j) in row"
-          :key="j"
-          class="piece"
-          :class="[`rotation-${box.piece.rotation}`]"
-          :src="`${assetsPath}/${box.piece.id}.png`">
-      </div>
+  <div class="board">
+    <div class="row" v-for="(row, i) in board.boxes" :key="i">
+      <img
+        v-for="(box, j) in row"
+        :key="j"
+        class="piece"
+        :class="[`rotation-${box.piece.rotation}`]"
+        :src="`${assetsPath}/${box.piece.id}.png`"
+      />
     </div>
   </div>
 </template>

@@ -15,6 +15,7 @@ module.exports = {
     'no-param-reassign': 'off',
     'lines-between-class-members': 'off',
     'no-continue': 'off',
+    'default-case': 'off',
   },
   parserOptions: {
     parser: '@typescript-eslint/parser',
