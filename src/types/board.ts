@@ -279,7 +279,7 @@ export class Board {
         if (box.piece.id === 0) {
           outputRow.push('X');
         } else {
-          outputRow.push(`${box.piece.id}(${box.piece.rotation})`);
+          outputRow.push(`${box.piece.id - 1}(${box.piece.rotation})`);
         }
       });
       output.push(outputRow.join('-'));
@@ -302,7 +302,7 @@ export class Board {
           piece = emptyPiece;
         } else {
           const [, id, rotation] = box.match(regex)!;
-          piece = cloneDeep(pieces.find(p => parseInt(id, 10) === p.id)!);
+          piece = cloneDeep(pieces.find(p => parseInt(id, 10) + 1 === p.id)!);
           piece.rotate(parseInt(rotation, 10));
         }
         this.setPiece(piece, x, y);
