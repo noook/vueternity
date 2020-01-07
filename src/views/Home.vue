@@ -1,8 +1,9 @@
 <template>
   <div class="home">
     <div class="board-container">
-      <BoardComponent :input="input" />
+      <h1>Input</h1>
       <SolutionInput :input.sync="input" />
+      <BoardComponent :input="input" />
     </div>
   </div>
 </template>
@@ -29,7 +30,9 @@ export default createComponent({
 <style lang="scss" scoped>
 .board-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 
 button {
@@ -45,5 +48,6 @@ button {
 
 h1 {
   font-size: 2em;
+  margin: 20px 0;
 }
 </style>

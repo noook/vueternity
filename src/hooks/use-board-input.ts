@@ -1,4 +1,4 @@
-import { computed } from '@vue/composition-api';
+import { computed, ref } from '@vue/composition-api';
 import { cloneDeep } from 'lodash';
 import { Board } from '@/types/board';
 import Piece, { pieces as availablePieces, emptyPiece } from '@/types/piece';
@@ -8,15 +8,24 @@ interface Props {
 }
 
 export default function useBoardInput(props: Props) {
+  const errors = ref<string[]>([]);
   const valid = computed(() => {
-    // eslint-disable-next-line
-    const lines = props.input.split("\n");
-    if (lines.length !== 16) return false;
+    errors.value = [];
+    const lines = props.input.split(/[\r\n]+/);
+    if (lines.length !== 16) {
+      errors.value.push('Lines length not equal to 16');
+      return false;
+    }
+
     const rows = lines.map(row => row.split('-'));
 
-    return rows.every(row => row.every((box) => {
+    return rows.every((row, y) => row.every((box, x) => {
       if (box.toUpperCase() === 'X') return true;
-      return (new RegExp(/^\d{1,3}\(\d\)$/)).test(box);
+      const boxValid = (new RegExp(/^\d{1,3}\(\d\)$/)).test(box);
+      if (!boxValid) {
+        errors.value.push(`Box with coordinates { x: ${x}, y: ${y} } is invalid`);
+      }
+      return boxValid;
     }));
   });
 
@@ -26,8 +35,7 @@ export default function useBoardInput(props: Props) {
     const pieces = cloneDeep(availablePieces);
     const regex = /^(\d{1,3})\((\d)\)$/;
 
-    // eslint-disable-next-line
-    const lines = props.input.split("\n");
+    const lines = props.input.split(/[\r\n]+/);
     const rows = lines.map(row => row.split('-'));
     for (let y = 0; y < rows.length; y += 1) {
       for (let x = 0; x < rows[y].length; x += 1) {
@@ -49,6 +57,7 @@ export default function useBoardInput(props: Props) {
 
   return {
     board,
+    errors,
     valid,
   };
 }

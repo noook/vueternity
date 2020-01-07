@@ -294,7 +294,7 @@ export class Board {
     const emptyPiece = new Piece();
     const pieces = cloneDeep(availablePieces);
     // eslint-disable-next-line quotes
-    const lines = input.split("\n");
+    const lines = input.split(/[\r\n]+/);
     lines.forEach((row, y) => {
       row.split('-').forEach((box, x) => {
         let piece: Piece;
