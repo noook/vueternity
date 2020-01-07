@@ -1,32 +1,26 @@
 <template>
   <div class="home">
     <div class="board-container">
-      <!-- <BoardComponent :board="board" /> -->
+      <BoardComponent :input="input" />
+      <SolutionInput :input.sync="input" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-/* eslint-disable no-await-in-loop */
-import { cloneDeep } from 'lodash';
-import {
-  createComponent, ref, Ref, computed,
-} from '@vue/composition-api';
+import { createComponent, ref } from '@vue/composition-api';
 import BoardComponent from '@/components/Board.vue';
-import { Board } from '@/types/board';
-import Piece, { pieces as availblePieces } from '@/types/piece';
-import { sleep, shuffle, partition } from '../utils';
-
-// eslint-disable-next-line
-let [pieces, borders] = partition(shuffle(cloneDeep(availblePieces)), (piece: Piece) => !piece.isBorder());
-// const pieces = shuffle(cloneDeep(availblePieces));
+import SolutionInput from '@/components/SolutionInput.vue';
 
 export default createComponent({
   components: {
     BoardComponent,
+    SolutionInput,
   },
   setup() {
+    const input = ref<string>('');
     return {
+      input,
     };
   },
 });

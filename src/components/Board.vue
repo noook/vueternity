@@ -1,6 +1,6 @@
 <template>
   <div class="board">
-    <div class="row" v-for="(row, i) in board.boxes" :key="i">
+    <!-- <div class="row" v-for="(row, i) in board.boxes" :key="i">
       <img
         v-for="(box, j) in row"
         :key="j"
@@ -8,7 +8,7 @@
         :class="[`rotation-${box.piece.rotation}`]"
         :src="`${assetsPath}/${box.piece.id}.png`"
       />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -18,19 +18,15 @@ import { Board } from '@/types/board';
 
 interface Props {
   board: Board;
-  preview: number;
 }
 
 const assetsPath = `${window.location.origin}/assets`;
 
 export default createComponent<Props>({
   props: {
-    board: {
-      type: Object as () => Board,
+    input: {
+      type: String,
       required: true,
-    },
-    preview: {
-      type: Number,
     },
   },
   setup(props: Props) {
