@@ -1,6 +1,6 @@
 <template>
-  <div class="board">
-    <!-- <div class="row" v-for="(row, i) in board.boxes" :key="i">
+  <div class="board" v-if="valid">
+    <div class="row" v-for="(row, i) in board.boxes" :key="i">
       <img
         v-for="(box, j) in row"
         :key="j"
@@ -8,16 +8,17 @@
         :class="[`rotation-${box.piece.rotation}`]"
         :src="`${assetsPath}/${box.piece.id}.png`"
       />
-    </div> -->
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { createComponent, computed } from '@vue/composition-api';
 import { Board } from '@/types/board';
+import useBoardInput from '@/hooks/use-board-input';
 
 interface Props {
-  board: Board;
+  input: string;
 }
 
 const assetsPath = `${window.location.origin}/assets`;
@@ -30,8 +31,12 @@ export default createComponent<Props>({
     },
   },
   setup(props: Props) {
+    const { board, valid } = useBoardInput(props);
+
     return {
       assetsPath,
+      board,
+      valid,
     };
   },
 });
