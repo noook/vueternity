@@ -13,45 +13,29 @@ import { cloneDeep } from 'lodash';
 import { createComponent, ref, Ref } from '@vue/composition-api';
 import BoardComponent from '@/components/Board.vue';
 import { Board } from '@/types/board';
-import Piece, { pieces as availblePieces } from '@/types/piece';
+import Piece, { pieces as availablePieces } from '@/types/piece';
 import { sleep, shuffle, partition } from '../utils';
-
-// eslint-disable-next-line
-// let [pieces, borders] = partition(shuffle(cloneDeep(availblePieces)), (piece: Piece) => !piece.isBorder());
-const pieces = shuffle(cloneDeep(availblePieces));
 
 export default createComponent({
   components: {
     BoardComponent,
   },
   setup() {
-    const board = ref<Board>(new Board(16, 16));
-    let solved = 0;
-    const tried: number[] = [];
+    function test(): Board {
+      // eslint-disable-next-line max-len
+      const [pieces, borders] = partition(shuffle(cloneDeep(availablePieces)), (piece: Piece) => !piece.isBorder());
+      const board = new Board(16, 16);
+      const tried : number[] = [];
 
-    function solve(b: Ref<Board>) {
-      const box = b.value.closestEmptyCell(7, 8, tried);
-      if (box === null) {
-        return;
-      }
-      tried.push(box!.id);
-      for (let i = 0; i < pieces.length; i += 1) {
-        const assigned = b.value.assignPiece(box!, pieces[i]);
-        if (assigned) {
-          b.value.setPiece(pieces.splice(i, 1)[0], box!.x, box!.y);
-          solved += 1;
-          break;
-        }
-      }
-      solve(b);
+      const middleIndex = pieces.findIndex(item => item.id === 139);
+      board.setPiece(pieces.splice(middleIndex, 1)[0], 7, 8);
+      board.solve(pieces, tried);
+      board.solveBorders(borders);
+      return board;
     }
 
-    const middleIndex = pieces.findIndex(item => item.id === 139);
-    board.value.setPiece(pieces.splice(middleIndex, 1)[0], 7, 8);
-    solve(board);
-
     return {
-      board,
+      board: test(),
     };
   },
 });
