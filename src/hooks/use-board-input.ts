@@ -15,7 +15,7 @@ export default function useBoardInput(props: Props) {
     const rows = lines.map(row => row.split('-'));
 
     return rows.every(row => row.every((box) => {
-      if (box === 'X') return true;
+      if (box.toUpperCase() === 'X') return true;
       return (new RegExp(/^\d{1,3}\(\d\)$/)).test(box);
     }));
   });

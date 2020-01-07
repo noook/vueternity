@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent, computed } from '@vue/composition-api';
+import { createComponent, watch, ref } from '@vue/composition-api';
 import { Board } from '@/types/board';
 import useBoardInput from '@/hooks/use-board-input';
 
@@ -31,7 +31,11 @@ export default createComponent<Props>({
     },
   },
   setup(props: Props) {
-    const { board, valid } = useBoardInput(props);
+    const { valid } = useBoardInput(props);
+    const board = ref(new Board(16, 16));
+    watch(() => props.input, (updated) => {
+      if (valid.value) board.value.import(updated);
+    });
 
     return {
       assetsPath,

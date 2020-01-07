@@ -1,6 +1,7 @@
+import { cloneDeep } from 'lodash';
 // eslint-disable-next-line
 import piecesReference from '!raw-loader!@/assets/pieces.txt';
-import Piece from './piece';
+import Piece, { pieces as availablePieces } from './piece';
 import { shuffle, partition } from '@/utils';
 
 type EdgeBox = Box & {
@@ -10,6 +11,8 @@ type EdgeBox = Box & {
 }
 
 type Position = 'top' | 'bottom' | 'left' | 'right';
+
+const regex = /^(\d{1,3})\((\d)\)$/;
 
 export class Box {
   public id: number;
@@ -284,6 +287,27 @@ export class Board {
 
     // eslint-disable-next-line
     return output.join("\n");
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  public import(input: string) {
+    const emptyPiece = new Piece();
+    const pieces = cloneDeep(availablePieces);
+    // eslint-disable-next-line quotes
+    const lines = input.split("\n");
+    lines.forEach((row, y) => {
+      row.split('-').forEach((box, x) => {
+        let piece: Piece;
+        if (box.toUpperCase() === 'X') {
+          piece = emptyPiece;
+        } else {
+          const [, id, rotation] = box.match(regex)!;
+          piece = cloneDeep(pieces.find(p => parseInt(id, 10) === p.id)!);
+          piece.rotate(parseInt(rotation, 10));
+        }
+        this.setPiece(piece, x, y);
+      });
+    });
   }
 
   public reset() {
