@@ -8,6 +8,7 @@ interface Props {
 }
 
 export default function useBoardInput(props: Props) {
+  const regex = /^(\d{1,3})\((\d)\)$/;
   const errors = ref<string[]>([]);
   const valid = computed(() => {
     errors.value = [];
@@ -21,9 +22,17 @@ export default function useBoardInput(props: Props) {
 
     return rows.every((row, y) => row.every((box, x) => {
       if (box.toUpperCase() === 'X') return true;
+
       const boxValid = (new RegExp(/^\d{1,3}\(\d\)$/)).test(box);
       if (!boxValid) {
         errors.value.push(`Box with coordinates { x: ${x}, y: ${y} } is invalid`);
+      } else {
+        const [, id] = box.match(regex)!;
+
+        if (parseInt(id, 10) < 0 || parseInt(id, 10) > 255) {
+          errors.value.push(`Invalid id ${id} for piece with coordinates { x: ${x}, y: ${y} }`);
+          return false;
+        }
       }
       return boxValid;
     }));
@@ -33,7 +42,6 @@ export default function useBoardInput(props: Props) {
     if (!valid.value) return null;
     const b = new Board(16, 16);
     const pieces = cloneDeep(availablePieces);
-    const regex = /^(\d{1,3})\((\d)\)$/;
 
     const lines = props.input.split(/[\r\n]+/);
     const rows = lines.map(row => row.split('-'));
