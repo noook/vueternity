@@ -100,6 +100,12 @@ export class Board {
     return this;
   }
 
+  public removePiece(x: number, y: number): Piece {
+    const { piece } = this.boxes[y][x];
+    this.boxes[y][x].piece = new Piece();
+
+    return piece;
+  }
   get validBoxes(): number {
     return this.boxes.reduce((acc, row) => {
       acc += row.filter(box => box.piece.id !== 0).length;

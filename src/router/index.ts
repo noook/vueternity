@@ -1,14 +1,20 @@
 import Vue, { VueConstructor } from 'vue';
 import VueRouter, { RouteConfig } from 'vue-router';
 import Home from '../views/Home.vue';
+import History from '../views/History.vue';
 
 Vue.use(VueRouter);
 
 const routes: RouteConfig[] = [
   {
     path: '/',
-    name: 'home',
+    name: 'History',
     component: Home as VueConstructor,
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: History as VueConstructor,
   },
 ];
 
