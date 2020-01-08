@@ -1,5 +1,6 @@
 <template>
   <div class="board" v-if="valid">
+    <p class="valid-boxes">You have placed {{ board.validBoxes }} pieces.</p>
     <div class="row" v-for="(row, i) in board.boxes" :key="i">
       <img
         v-for="(box, j) in row"
@@ -54,6 +55,10 @@ export default createComponent<Props>({
     display: grid;
     grid-template: 1fr / repeat(16, 1fr);
   }
+}
+
+p.valid-boxes {
+  margin: 0 0 15px;
 }
 
 img.piece {
